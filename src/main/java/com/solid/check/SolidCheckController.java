@@ -32,10 +32,34 @@ public class SolidCheckController {
 
 	@PostMapping("/upload")
 	public String uploadFile(@RequestParam("file") MultipartFile file, Model model) throws IOException {
-		String content = new String(file.getBytes());
-		String result = solidCheckService.analyze(content).toString();
-		model.addAttribute("originalCode", content);
-		model.addAttribute("analyzedCode", result);
-		return "result";
+		try {
+			// Перевіряємо, чи файл не порожній
+			if (file.isEmpty()) {
+				System.out.println("Файл порожній.");
+				model.addAttribute("error", "Uploaded file is empty!");
+				return "result";
+			}
+
+			// Зчитуємо вміст файлу
+			String content = new String(file.getBytes());
+			System.out.println("Завантажений код: \n" + content);
+
+			// Аналізуємо код
+			List<AnalyzedLine> analyzedCodeLines = solidCheckService.analyze(content);
+
+			// Додаємо дані в модель
+			model.addAttribute("originalCode", content);
+			model.addAttribute("analyzedCodeLines", analyzedCodeLines);
+
+			System.out.println("Аналіз завершено успішно.");
+			return "result";
+		} catch (Exception e) {
+			// Логування помилки
+			System.err.println("Помилка при обробці файлу: " + e.getMessage());
+			model.addAttribute("error", "Error processing the file: " + e.getMessage());
+			return "result";
+		}
 	}
+
+
 }
